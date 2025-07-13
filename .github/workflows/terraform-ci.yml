@@ -1,0 +1,61 @@
+name: Terraform CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'projects/**'
+      - '!projects/example-project/**'
+  pull_request:
+    paths:
+      - 'projects/**'
+      - '!projects/example-project/**'
+
+jobs:
+  set-matrix:
+    uses: ./.github/workflows/set-matrix.yml
+
+  terraform:
+    needs: set-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 'latest'
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Terraform Fmt
+        run: terraform fmt -check -recursive
+        working-directory: projects/${{ matrix.project }}
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: projects/${{ matrix.project }}
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: projects/${{ matrix.project }}
+        if: ${{ matrix.project != 'example-project' }}
+      
+      - name: Terraform Security Scan (tfsec)
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: projects/${{ matrix.project }}
+          format: sarif
+          soft_fail: true
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: projects/${{ matrix.project }}
+        if: ${{ matrix.project != 'example-project' }} 

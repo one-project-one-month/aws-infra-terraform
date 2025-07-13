@@ -1,0 +1,57 @@
+name: Terraform CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'projects/**'
+      - '!projects/example-project/**'
+
+jobs:
+  set-matrix:
+    uses: ./.github/workflows/set-matrix.yml
+
+  terraform-apply:
+    needs: set-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/deployments
+    concurrency:
+      group: "terraform-apply"
+      cancel-in-progress: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: projects/${{ matrix.project }}
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Wait for approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: ${{ github.repository_owner }}
+          minimum-approvals: 1
+          issue-title: "Terraform Apply Approval for ${{ matrix.project }}"
+          issue-body: "Please approve to apply Terraform for ${{ matrix.project }}."
+        if: ${{ matrix.project != 'example-project' }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: projects/${{ matrix.project }}
+        env:
+          TF_IN_AUTOMATION: true
+        if: ${{ matrix.project != 'example-project' }}
