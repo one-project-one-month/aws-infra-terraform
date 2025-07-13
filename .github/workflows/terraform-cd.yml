@@ -1,12 +1,7 @@
 name: Terraform CD
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'projects/**'
-      - '!projects/example-project/**'
+  workflow_dispatch:
 
 jobs:
   set-matrix:
@@ -19,8 +14,7 @@ jobs:
       matrix:
         project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     environment:
-      name: production
-      url: https://github.com/${{ github.repository }}/deployments
+      name: deploy
     concurrency:
       group: "terraform-apply"
       cancel-in-progress: false
