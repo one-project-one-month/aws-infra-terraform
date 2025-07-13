@@ -22,6 +22,9 @@ jobs:
     strategy:
       matrix:
         project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    env:
+      TF_VAR_backend_bucket: ${{ secrets.TF_BACKEND_BUCKET }}
+      TF_VAR_backend_key: ${{ format('{0}/terraform.tfstate', matrix.project) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,7 +41,7 @@ jobs:
         if: ${{ matrix.project != 'example-project' }}
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="bucket=${{ env.TF_VAR_backend_bucket }}" -backend-config="key=${{ env.TF_VAR_backend_key }}"
         working-directory: projects/${{ matrix.project }}
         if: ${{ matrix.project != 'example-project' }}
 
