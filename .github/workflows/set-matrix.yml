@@ -32,8 +32,8 @@ jobs:
           fi
           # Exclude example-project
           CHANGED=$(echo "$CHANGED" | grep -v '^example-project$')
-          # Build JSON array
-          MATRIX=$(printf '%s\n' $CHANGED | jq -R . | jq -s .)
+          # Build compact JSON array (no leading/trailing spaces)
+          MATRIX=$(printf '%s\n' $CHANGED | jq -R . | jq -s -c .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
         shell: bash
         env:
