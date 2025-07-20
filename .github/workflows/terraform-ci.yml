@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+        project: ${{ fromJson(needs.set-matrix.outputs.project-name) }}
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}
