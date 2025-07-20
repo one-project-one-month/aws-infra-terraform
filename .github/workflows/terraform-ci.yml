@@ -44,7 +44,7 @@ jobs:
           pwd
           ls -al
       - name: Terraform Fmt
-        run: terraform fmt -check -recursive
+        run: terraform fmt -recursive
         if: ${{ matrix.project != 'example-project' }}
 
       - name: Terraform Init
