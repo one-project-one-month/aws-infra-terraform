@@ -2,6 +2,10 @@ name: Set Matrix
 
 on:
   workflow_call:
+    inputs:
+      project:
+        required: false
+        type: string
     outputs:
       project-name:
         description: "project name to run"
@@ -80,15 +84,8 @@ jobs:
               echo "Project name is not provided. Run all projects."
               echo "project-name=${available_projects}" >> $GITHUB_OUTPUT
             else
-              export file="/${{ github.event.inputs.cloud-project-name }}"
-              echo "file=${file}"
-              export env=$(awk -F'"' '/env/{print $2}' ".${file//\"/}/terraform.tfvars")
-              export full_dc=$(awk -F'"' '/deployment_zone/{print $2}' ".${file//\"/}/terraform.tfvars")
-              export dc=$(echo "$full_dc" | sed 's/^deploymentzone-//')
-              echo " env=${env}"
-              echo " dc=${dc}"
-              echo "Project name is provided. Only run with project-name"
-              echo "project-name=[\"${{ github.event.inputs.cloud-account }}_${{ github.event.inputs.cloud-project-name }}_${{ github.event.inputs.cloud-subproject-name }}\"]" >> $GITHUB_OUTPUT
+              echo "Running with specific project name is not yet supported!"
+              exit 1
             fi
       # - name: Get changed projects
       #   id: set-matrix

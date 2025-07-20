@@ -37,7 +37,12 @@ jobs:
         with:
           terraform_version: 'latest'
         if: ${{ matrix.project != 'example-project' }}
-
+      - name: Test Project Detail
+        run: |
+          echo "Project: ${{ needs.set-matrix.outputs.project-name }}"
+          echo "---------------------------- Check location ------------------------"
+          pwd
+          ls -al
       - name: Terraform Fmt
         run: terraform fmt -check -recursive
         if: ${{ matrix.project != 'example-project' }}
