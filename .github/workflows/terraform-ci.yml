@@ -22,6 +22,9 @@ jobs:
     strategy:
       matrix:
         project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: projects/${{ matrix.project }}
     env:
       TF_VAR_backend_bucket: ${{ secrets.TF_BACKEND_BUCKET }}
       TF_VAR_backend_key: ${{ format('{0}/terraform.tfstate', matrix.project) }}
@@ -37,28 +40,24 @@ jobs:
 
       - name: Terraform Fmt
         run: terraform fmt -check -recursive
-        working-directory: projects/${{ matrix.project }}
         if: ${{ matrix.project != 'example-project' }}
 
       - name: Terraform Init
         run: terraform init -backend-config="bucket=${{ env.TF_VAR_backend_bucket }}" -backend-config="key=${{ env.TF_VAR_backend_key }}"
-        working-directory: projects/${{ matrix.project }}
         if: ${{ matrix.project != 'example-project' }}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: projects/${{ matrix.project }}
         if: ${{ matrix.project != 'example-project' }}
       
       - name: Terraform Security Scan (tfsec)
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
-          working_directory: projects/${{ matrix.project }}
+          working_directory: .
           format: sarif
           soft_fail: true
         if: ${{ matrix.project != 'example-project' }}
 
       - name: Terraform Plan
         run: terraform plan
-        working-directory: projects/${{ matrix.project }}
         if: ${{ matrix.project != 'example-project' }} 

@@ -38,3 +38,9 @@ jobs:
         shell: bash
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
+
+      - name: Show matrix debug output
+        run: |
+          echo "CHANGED: $CHANGED"
+          echo "MATRIX: $MATRIX"
+        shell: bash
