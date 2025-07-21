@@ -14,3 +14,4 @@ terraform.rc
 
 # Local env files
 .env
+.secrets

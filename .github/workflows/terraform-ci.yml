@@ -1,6 +1,11 @@
 name: Terraform CI
 
+concurrency:
+  group: terraform-ci-${{ github.ref }}
+  cancel-in-progress: true
 on:
+  workflow_dispatch: 
+  pull_request_review: 
   push:
     branches:
       - main
@@ -14,48 +19,22 @@ on:
 
 jobs:
   set-matrix:
-    uses: ./.github/workflows/set-matrix.yml
+    uses: one-project-one-month/common-workflows/.github/workflows/common-set-matrix.yml@main
 
-  terraform:
+  terraform-ci:
     needs: set-matrix
-    runs-on: ubuntu-latest
     strategy:
+      max-parallel: 5
       matrix:
-        project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+        project: ${{ fromJson(needs.set-matrix.outputs.project-name) }}
+    
+    uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-plan.yml@main
+    with:
+      project: ${{ matrix.project }}
+      s3_bucket: ${{ vars.TF_STATE_S3_BUCKET }}
+      tf_provider_template: "../../_templates/providers-template"
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 'latest'
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Fmt
-        run: terraform fmt -check -recursive
-        working-directory: projects/${{ matrix.project }}
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: projects/${{ matrix.project }}
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: projects/${{ matrix.project }}
-        if: ${{ matrix.project != 'example-project' }}
-      
-      - name: Terraform Security Scan (tfsec)
-        uses: aquasecurity/tfsec-action@v1.0.3
-        with:
-          working_directory: projects/${{ matrix.project }}
-          format: sarif
-          soft_fail: true
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Plan
-        run: terraform plan
-        working-directory: projects/${{ matrix.project }}
-        if: ${{ matrix.project != 'example-project' }} 
+    secrets: 
+      s3_access_key: ${{ secrets.TF_STATE_S3_ACCESS_KEY_ID }}
+      s3_secret_key: ${{ secrets.TF_STATE_S3_SECRET_ACCESS_KEY }}
+      github_checkout_token: ${{ secrets.GH_TOKEN_SVC_PUBLISH }}
