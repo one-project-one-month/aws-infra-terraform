@@ -1,6 +1,11 @@
 name: Terraform CI
 
+concurrency:
+  group: terraform-ci-${{ github.ref }}
+  cancel-in-progress: true
 on:
+  workflow_dispatch: 
+  pull_request_review: 
   push:
     branches:
       - main
@@ -14,55 +19,24 @@ on:
 
 jobs:
   set-matrix:
-    uses: ./.github/workflows/set-matrix.yml
+    uses: one-project-one-month/common-workflows/.github/workflows/common-set-matrix.yml@main
 
-  terraform:
+  terraform-ci:
     needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 5
       matrix:
         project: ${{ fromJson(needs.set-matrix.outputs.project-name) }}
-    defaults:
-      run:
-        working-directory: projects/${{ matrix.project }}
-    env:
-      TF_VAR_backend_bucket: ${{ secrets.TF_BACKEND_BUCKET }}
-      TF_VAR_backend_key: ${{ format('{0}/terraform.tfstate', matrix.project) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    
+    uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-plan.yml@main
+    with:
+      project: ${{ matrix.project }}
+      s3_enpoint: ${{ vars.TF_STATE_S3_ENDPOINT }}
+      s3_bucket: ${{ vars.TF_STATE_S3_BUCKET }}
+      tf_provider_template: "../../../_templates/providers-template"
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 'latest'
-        if: ${{ matrix.project != 'example-project' }}
-      - name: Test Project Detail
-        run: |
-          echo "Project: ${{ needs.set-matrix.outputs.project-name }}"
-          echo "---------------------------- Check location ------------------------"
-          pwd
-          ls -al
-      - name: Terraform Fmt
-        run: terraform fmt -recursive
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ env.TF_VAR_backend_bucket }}" -backend-config="key=${{ env.TF_VAR_backend_key }}"
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Validate
-        run: terraform validate
-        if: ${{ matrix.project != 'example-project' }}
-      
-      - name: Terraform Security Scan (tfsec)
-        uses: aquasecurity/tfsec-action@v1.0.3
-        with:
-          working_directory: .
-          format: sarif
-          soft_fail: true
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Plan
-        run: terraform plan
-        if: ${{ matrix.project != 'example-project' }} 
+    secrets: 
+      s3_access_key: ${{ secrets.TF_STATE_S3_ACCESS_KEY_ID }}
+      s3_secret_key: ${{ secrets.TF_STATE_S3_SECRET_ACCESS_KEY }}
+      github_checkout_token: ${{ secrets.GH_TOKEN_SVC_PUBLISH }}
