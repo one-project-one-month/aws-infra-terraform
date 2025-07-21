@@ -23,7 +23,6 @@ jobs:
 
   terraform-ci:
     needs: set-matrix
-    runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
       matrix:
