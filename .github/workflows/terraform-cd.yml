@@ -1,54 +1,37 @@
 name: Terraform CD
 
+# Prevent running CD jobs in the same branch
+# If the user wants to run a new one, they must manually cancel the existing jobs
+concurrency:
+  group: terraform-cd-${{ github.ref }}
+  cancel-in-progress: false
 on:
   workflow_dispatch:
-
+    inputs: 
+      project-name:
+        description: "Project name if you want to run only for a specific project. If not provided, all projects will be run."
+        required: true
+        type: string
 jobs:
   set-matrix:
-    uses: ./.github/workflows/set-matrix.yml
+    uses: one-project-one-month/common-workflows/.github/workflows/common-set-matrix.yml@main
 
   terraform-apply:
     needs: set-matrix
-    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
+      max-parallel: 5
       matrix:
         project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
-    environment:
-      name: deploy
-    concurrency:
-      group: "terraform-apply"
-      cancel-in-progress: false
-    env:
-      TF_VAR_backend_bucket: ${{ secrets.TF_BACKEND_BUCKET }}
-      TF_VAR_backend_key: ${{ format('{0}/terraform.tfstate', matrix.project) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-plan.yml@main
+    with:
+      project: ${{ matrix.project }}
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.6
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ env.TF_VAR_backend_bucket }}" -backend-config="key=${{ env.TF_VAR_backend_key }}"
-        working-directory: projects/${{ matrix.project }}
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Wait for approval
-        uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: ${{ github.repository_owner }}
-          minimum-approvals: 1
-          issue-title: "Terraform Apply Approval for ${{ matrix.project }}"
-          issue-body: "Please approve to apply Terraform for ${{ matrix.project }}."
-        if: ${{ matrix.project != 'example-project' }}
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: projects/${{ matrix.project }}
-        env:
-          TF_IN_AUTOMATION: true
-        if: ${{ matrix.project != 'example-project' }}
+      s3_bucket: ${{ vars.TF_STATE_S3_BUCKET }}
+      tf_cli_config_file: "../../../modules/terraformrc.tfrc"
+      tf_provider_template: "../../_templates/providers-template
+    
+    secrets: 
+      s3_access_key: ${{ secrets.TF_STATE_S3_ACCESS_KEY_ID }}
+      s3_secret_key: ${{ secrets.TF_STATE_S3_SECRET_ACCESS_KEY }}
+      github_checkout_token: ${{ secrets.GH_TOKEN_SVC_PUBLISH }}
