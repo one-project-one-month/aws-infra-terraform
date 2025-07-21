@@ -26,9 +26,7 @@ jobs:
     uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-plan.yml@main
     with:
       project: ${{ matrix.project }}
-
       s3_bucket: ${{ vars.TF_STATE_S3_BUCKET }}
-      tf_cli_config_file: "../../../modules/terraformrc.tfrc"
       tf_provider_template: "../../_templates/providers-template"
     
     secrets: 
