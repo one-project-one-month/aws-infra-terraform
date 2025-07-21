@@ -23,7 +23,7 @@ jobs:
       max-parallel: 5
       matrix:
         project: ${{ fromJson(needs.set-matrix.outputs.project-name) }}
-    uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-plan.yml@main
+    uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-apply.yml@main
     with:
       project: ${{ matrix.project }}
       s3_bucket: ${{ vars.TF_STATE_S3_BUCKET }}
