@@ -33,7 +33,7 @@ jobs:
       project: ${{ matrix.project }}
       s3_enpoint: ${{ vars.TF_STATE_S3_ENDPOINT }}
       s3_bucket: ${{ vars.TF_STATE_S3_BUCKET }}
-      tf_provider_template: "../../../_templates/providers-template"
+      tf_provider_template: "../../_templates/providers-template"
 
     secrets: 
       s3_access_key: ${{ secrets.TF_STATE_S3_ACCESS_KEY_ID }}
