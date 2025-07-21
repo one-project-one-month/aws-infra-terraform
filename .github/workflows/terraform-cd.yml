@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       max-parallel: 5
       matrix:
-        project: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+        project: ${{ fromJson(needs.set-matrix.outputs.project-name) }}
     uses: one-project-one-month/common-workflows/.github/workflows/common-terraform-plan.yml@main
     with:
       project: ${{ matrix.project }}
