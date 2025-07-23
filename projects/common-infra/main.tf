@@ -1,7 +1,3 @@
-provider "aws" {
-  region = local.region
-}
-
 locals {
   region          = "ap-southeast-1"
   cluster_name    = "opom-infra-prod"
