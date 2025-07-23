@@ -9,7 +9,7 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.0.0"
+  version = "5.21.0"
 
   name = "${local.cluster_name}-vpc"
   cidr = local.vpc_cidr_block
@@ -18,10 +18,12 @@ module "vpc" {
   public_subnets  = local.public_subnets
   private_subnets = local.private_subnets
 
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+  enable_nat_gateway     = true
+  single_nat_gateway     = true
+  one_nat_gateway_per_az = false
+  enable_dns_hostnames   = true
+  enable_dns_support     = true
+  enable_flow_log        = false
 }
 
 module "eks" {
