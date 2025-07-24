@@ -1,17 +1,3 @@
-# Configure Terraform providers
-terraform {
-  required_providers {
-    helm = {
-      source  = "hashicorp/helm"
-      version = "3.0.2"
-    }
-    kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = "~> 1.14"
-    }
-  }
-}
-
 provider "helm" {
   kubernetes {
     host                   = data.aws_eks_cluster.cluster.endpoint
