@@ -4,7 +4,7 @@ on:
   workflow_call:
     outputs:
       matrix:
-        description: 'Matrix of changed projects'
+        description: "Matrix of changed projects"
         value: ${{ jobs.set-matrix.outputs.matrix }}
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
             CHANGED=$(ls projects)
           fi
           # Exclude example-project
-          CHANGED=$(echo "$CHANGED" | grep -v '^example-project$')
+          CHANGEv 'D=$(echo "$CHANGED" | grep -^example-project$')
           # Build JSON array
           MATRIX=$(printf '%s\n' $CHANGED | jq -R . | jq -s .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
