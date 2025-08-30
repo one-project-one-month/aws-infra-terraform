@@ -38,14 +38,14 @@ resource "helm_release" "redis" {
 
   values = [file("${path.module}/helm/redis-values.yaml")]
 
-
 }
 
 # Spring Boot Release (local chart)
 resource "helm_release" "springboot_app" {
   name      = "springboot-app"
   namespace = helm_release.mysql.namespace
-  chart     = "${path.root}/../charts/springboot-app"
+
+  chart = "${path.module}/../charts"
 
   values = [
     file("${path.module}/helm/springboot-app-values.yaml")
