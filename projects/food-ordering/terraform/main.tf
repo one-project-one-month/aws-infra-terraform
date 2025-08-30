@@ -30,25 +30,23 @@ resource "helm_release" "mysql" {
 # Redis Release
 resource "helm_release" "redis" {
   name      = "redis"
-  namespace = "food-ordering"
+  namespace = helm_release.mysql.namespace
 
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "redis"
   version    = "18.8.2"
 
   values = [file("${path.module}/helm/redis-values.yaml")]
+
+
 }
 
 # Spring Boot Release (local chart)
 resource "helm_release" "springboot_app" {
-  name = "springboot-app"
+  name      = "springboot-app"
+  namespace = helm_release.mysql.namespace
+  chart     = "${path.root}/../charts/springboot-app"
 
-  # Helm chart stored in ECR as OCI registry
-  repository = "oci://${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.helm_repository}"
-  chart      = "springboot-app"
-
-
-  # Values override file from infra repo
   values = [
     file("${path.module}/helm/springboot-app-values.yaml")
   ]
